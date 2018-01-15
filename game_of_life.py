@@ -63,7 +63,7 @@ def generation(universe):
         for y in range(len(universe[0])):
             universe[x][y].update_state()
 
-    return universe
+    
 
 
 def animate_life(dim, n_generations=30, interval=300, save=False):
@@ -76,18 +76,18 @@ def animate_life(dim, n_generations=30, interval=300, save=False):
             universe.append(inner)
 
     # Animate
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6,6))
     plt.axis('off')
     ims = []
 
     for i in range(n_generations):
-        frame = np.zeros((len(universe), len(universe[0])))
-        for x in range(len(universe)):
-            for y in range(len(universe[0])):
+        frame = np.zeros((dim[0], dim[1]))
+        for x in range(dim[0]):
+            for y in range(dim[1]):
                 frame[x, y] = universe[x][y].state
 
         ims.append((plt.imshow(frame, cmap='Blues'),))
-        universe = generation(universe)
+        generation(universe)
         print(f'frame{i}')
 
     im_ani = animation.ArtistAnimation(fig, ims, interval=interval, repeat_delay=3000,
@@ -98,4 +98,4 @@ def animate_life(dim, n_generations=30, interval=300, save=False):
         im_ani.save(('Class_test.mp4'), writer=animation.FFMpegWriter(), dpi=300)
 
 
-animate_life(dim=(25, 25), n_generations=100, interval=1, save=True)
+animate_life(dim=(10, 10), n_generations=100, interval=1, save=True)
