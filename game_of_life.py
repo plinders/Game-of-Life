@@ -39,6 +39,22 @@ class Cell:
         elif num_neighbours == REPRODUCTION:
             self.new_state = 1
 
+def create_field(width, height):
+    field = []
+    for y in range(width):
+        inner = []
+        for x in range(height):
+            inner.append(Cell(x, y, np.random.randint(0, 2)))
+        field.append(inner)
+    return field
+
+def make_array(field):
+    frame = np.zeros((len(field), len(field[0])))
+    for y in range(len(field)):
+        for x in range(len(field[0])):
+            frame[x, y] = field[x][y].state
+    return frame
+
 def count_neighbours(universe, cell):
     num_neighbours = 0
     cols = len(universe)
@@ -46,34 +62,35 @@ def count_neighbours(universe, cell):
 
     for i in range(cell.x - 1, cell.x + 2):
         for j in range(cell.y - 1, cell.x + 2):
-            col = (cell.x + i + cols) % cols
-            row = (cell.y + j + rows) % rows
+            col = (cell.x + j + cols) % cols
+            row = (cell.y + i + rows) % rows
             num_neighbours += universe[col][row].state
     num_neighbours -= cell.state
     return(num_neighbours)
 
-def generation(universe):
-    # Simple loop over every possible xy coordinate.
-    for x in range(len(universe)):
-        for y in range(len(universe[0])):
-            neighbours = count_neighbours(universe, universe[x][y])
-            universe[x][y].survival(neighbours)
+class Universe:
+    def __init__(self, dim):
+        self.width, self.height = dim
+        self.field = create_field(self.width, self.height)
+        self.field_array = make_array(self.field)
+        self.field_list = [self.field_array]
+    def generation(self):
+        for y in range(self.height):
+            for x in range(self.width):
+                neighbours = count_neighbours(self.field, self.field[x][y])
+                self.field[x][y].survival(neighbours)
 
-    for x in range(len(universe)):
-        for y in range(len(universe[0])):
-            universe[x][y].update_state()
+        for y in range(self.height):
+            for x in range(self.width):
+                self.field[x][y].update_state()
 
-    
+        self.field_array = make_array(self.field)
+        self.field_list.append(self.field_array)
 
 
 def animate_life(dim, n_generations=30, interval=300, save=False):
     # Initialise the universe and seed
-    universe = []
-    for x in range(dim[0]):
-        inner = []
-        for y in range(dim[1]):
-            inner.append(Cell(x, y, np.random.randint(0, 2)))
-            universe.append(inner)
+    universe = Universe(dim)
 
     # Animate
     fig = plt.figure(figsize=(6,6))
@@ -81,13 +98,9 @@ def animate_life(dim, n_generations=30, interval=300, save=False):
     ims = []
 
     for i in range(n_generations):
-        frame = np.zeros((dim[0], dim[1]))
-        for x in range(dim[0]):
-            for y in range(dim[1]):
-                frame[x, y] = universe[x][y].state
+        universe.generation()
 
-        ims.append((plt.imshow(frame, cmap='Blues'),))
-        generation(universe)
+        ims.append((plt.imshow(universe.field_array, cmap='Blues'),))
         print(f'frame{i}')
 
     im_ani = animation.ArtistAnimation(fig, ims, interval=interval, repeat_delay=3000,
@@ -98,4 +111,4 @@ def animate_life(dim, n_generations=30, interval=300, save=False):
         im_ani.save(('Class_test.mp4'), writer=animation.FFMpegWriter(), dpi=300)
 
 
-animate_life(dim=(10, 10), n_generations=100, interval=1, save=True)
+animate_life(dim=(100, 100), n_generations=100, interval=1, save=True)
