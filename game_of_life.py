@@ -60,10 +60,10 @@ def count_neighbours(universe, cell):
     cols = len(universe)
     rows = len(universe[0])
 
-    for i in range(cell.x - 1, cell.x + 2):
-        for j in range(cell.y - 1, cell.x + 2):
-            col = (cell.x + j + cols) % cols
-            row = (cell.y + i + rows) % rows
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            col = (cell.x + i + cols) % cols
+            row = (cell.y + j + rows) % rows
             num_neighbours += universe[col][row].state
     num_neighbours -= cell.state
     return(num_neighbours)
@@ -98,10 +98,11 @@ def animate_life(dim, n_generations=30, interval=300, save=False):
     ims = []
 
     for i in range(n_generations):
-        universe.generation()
-
         ims.append((plt.imshow(universe.field_array, cmap='Blues'),))
+        universe.generation()
         print(f'frame{i}')
+
+
 
     im_ani = animation.ArtistAnimation(fig, ims, interval=interval, repeat_delay=3000,
                                        blit=True)
@@ -111,4 +112,4 @@ def animate_life(dim, n_generations=30, interval=300, save=False):
         im_ani.save(('Class_test.mp4'), writer=animation.FFMpegWriter(), dpi=300)
 
 
-animate_life(dim=(100, 100), n_generations=100, interval=1, save=True)
+animate_life(dim=(200, 200  ), n_generations=100, interval=1, save=True)
