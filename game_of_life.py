@@ -30,63 +30,57 @@ class Cell:
         self.state = state
         self.new_state = state
 
-    def update_state(self):
+    def updateState(self):
         self.state = self.new_state
 
-    def survival(self, num_neighbours):
-        if self.state and not UNDERPOPULATION <= num_neighbours <= OVERPOPULATION:
+    def calcSurvival(self, num_neighbours):
+        if self.state == 0 and num_neighbours == REPRODUCTION:
+            self.new_state = 1.
+        elif self.state == 1. and (num_neighbours < UNDERPOPULATION or num_neighbours > OVERPOPULATION):
             self.new_state = 0
-        elif num_neighbours == REPRODUCTION:
-            self.new_state = 1
-
-def create_field(width, height):
-    field = []
-    for y in range(width):
-        inner = []
-        for x in range(height):
-            inner.append(Cell(x, y, np.random.randint(0, 2)))
-        field.append(inner)
-    return field
-
-def make_array(field):
-    frame = np.zeros((len(field), len(field[0])))
-    for y in range(len(field)):
-        for x in range(len(field[0])):
-            frame[x, y] = field[x][y].state
-    return frame
-
-def count_neighbours(universe, cell):
-    num_neighbours = 0
-    cols = len(universe)
-    rows = len(universe[0])
-
-    for i in range(-1, 2):
-        for j in range(-1, 2):
-            col = (cell.x + i + cols) % cols
-            row = (cell.y + j + rows) % rows
-            num_neighbours += universe[col][row].state
-    num_neighbours -= cell.state
-    return(num_neighbours)
+        else: self.new_state = self.state
 
 class Universe:
     def __init__(self, dim):
         self.width, self.height = dim
-        self.field = create_field(self.width, self.height)
-        self.field_array = make_array(self.field)
-        self.field_list = [self.field_array]
+        self.world = createWorld(self.width, self.height)
+        self.worldArray = toArray(self.world)
+        self.worldList = [self.worldArray]
     def generation(self):
         for y in range(self.height):
             for x in range(self.width):
-                neighbours = count_neighbours(self.field, self.field[x][y])
-                self.field[x][y].survival(neighbours)
+                neighbours = countNeighbours(self.world, self.world[x][y])
+                self.world[x][y].calcSurvival(neighbours)
 
+    def updateWorld(self):
         for y in range(self.height):
             for x in range(self.width):
-                self.field[x][y].update_state()
+                self.world[x][y].updateState()
 
-        self.field_array = make_array(self.field)
-        self.field_list.append(self.field_array)
+        self.worldArray = toArray(self.world)
+        self.worldList.append(self.worldArray)
 
+def createWorld(width, height):
+    world = [[Cell(x, y, np.random.randint(0, 2)) for y in range(height)] for x in range(width)]
+    return(world)
+
+def toArray(world):
+    frame = [[world[x][y].state for y in range(len(world[0]))] for x in range(len(world[1]))]
+    return(np.array(frame))
+
+def countNeighbours(world, cell):
+    numNeighbours = 0
+    cols = len(world[0])
+    rows = len(world[1])
+
+    for x in range(-1, 2):
+        for y in range(-1, 2):
+            if cell.x != x and cell.y != y:
+                col = (cell.x + x + cols) % cols
+                row = (cell.y + y + rows) % rows
+                numNeighbours += world[col][row].state
+
+    return(numNeighbours)
 
 def animate_life(dim, n_generations=30, interval=300, save=False):
     # Initialise the universe and seed
@@ -98,18 +92,29 @@ def animate_life(dim, n_generations=30, interval=300, save=False):
     ims = []
 
     for i in range(n_generations):
-        ims.append((plt.imshow(universe.field_array, cmap='Blues'),))
+        ims.append((plt.imshow(universe.worldArray, cmap='Blues'),))
         universe.generation()
+        universe.updateWorld()
         print(f'frame{i}')
+        print(len(universe.worldList))
 
 
 
-    im_ani = animation.ArtistAnimation(fig, ims, interval=interval, repeat_delay=3000,
+    im_ani = animation.ArtistAnimation(fig, ims, interval=interval, repeat_delay=None,
                                        blit=True)
 
     # Optional: save the animation, with a name based on the seed.
     if save:
-        im_ani.save(('Class_test.mp4'), writer=animation.FFMpegWriter(), dpi=300)
+        im_ani.save(('test.mp4'), writer=animation.FFMpegWriter(), dpi=300)
 
+def runEpoch(dim, n_generations=50):
+    universe = Universe(dim)
+    for i in range(n_generations):
+        universe.generation()
+        universe.updateWorld()
+    return(universe.worldList)
 
-animate_life(dim=(200, 200  ), n_generations=100, interval=1, save=True)
+data = [runEpoch((100, 100)) for i in range(10)]
+np.save('data.npy', np.array(data))
+
+# animate_life(dim=(200, 200), n_generations=100, interval=1, save=True)
