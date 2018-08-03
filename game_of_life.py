@@ -22,6 +22,7 @@ REPRODUCTION = 3
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import h5py
 
 class Cell:
     def __init__(self, x, y, state):
@@ -114,7 +115,19 @@ def runEpoch(dim, n_generations=50):
         universe.updateWorld()
     return(universe.worldList)
 
-data = [runEpoch((100, 100)) for i in range(10)]
-np.save('data.npy', np.array(data))
+# largeData = [runEpoch((100, 100)) for i in range(10)]
+# np.save('largeData.npy', np.array(largeData))
+#
+# smallData = [runEpoch((10,10)) for i in range(10)]
+# np.save('smallData.npy', np.array(smallData))
+#
+# longData = [runEpoch((20,20)) for i in range(100)]
+# np.save('longData.npy', np.array(longData))
+
+longLargeData = [runEpoch((100,100)) for i in range(100)]
+# np.save('longLargeData.npy', np.array(longData))
+with h5py.File('longLargeData.h5', 'w') as file:
+    file.create_dataset('longLargeData', data=longLargeData)
+
 
 # animate_life(dim=(200, 200), n_generations=100, interval=1, save=True)
